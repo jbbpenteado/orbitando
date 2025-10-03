@@ -1,3 +1,7 @@
+# Ignora qualquer pasta bin ou obj em qualquer profundidade
+**/bin/
+**/obj/
+
 # Prerequisites
 *.d
 
@@ -23,7 +27,7 @@
 *.lo
 
 # Shared objects (inc. Windows DLLs)
-*.dll
+# *.dll
 *.so
 *.so.*
 *.dylib

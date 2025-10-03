@@ -1,0 +1,96 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Orbital WASM — Objects Orbiting Simulation</title>
+
+  <link rel="icon" href="data:;base64,iVBORw0KGgo=">
+
+  <!-- Define Module early so index.js can augment it -->
+  <script>
+    // Minimal Module preconfiguration: avoid re-declare Module later
+    window.Module = window.Module || {};
+    Module.canvas = document.getElementById && document.getElementById('mainCanvas') || null;
+    Module.print = function(x){ console.log('[Module]', (new Date()).toISOString(), x); };
+    Module.printErr = function(x){ console.error('[Module][ERR]', (new Date()).toISOString(), x); };
+
+    // Extra debug helpers used by index.js/app.js
+    Module._debug = Module._debug || {};
+    Module._debug.startTime = Date.now();
+    Module._debug.log = function(...args){
+      console.log('[DBG]', (new Date()).toISOString(), ...args);
+    };
+    // Prevent accidental overwrite of Module by other scripts
+    Object.defineProperty(window, 'Module', { configurable: true, writable: true, value: window.Module });
+  </script>
+
+  <style>
+    body { background:#111; color:#eee; font-family:system-ui, Arial; margin:12px; }
+    #top { display:flex; gap:16px; align-items:center; }
+    #status { font-size:13px; color:#9cf; }
+    #canvas-wrap { margin-top:12px; background:#000; display:flex; align-items:center; justify-content:center; border:1px solid #333; }
+    #controls { margin-top:12px; display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
+    .row { margin:6px 0; display:flex; gap:8px; align-items:center; }
+    .row input { width:6.5em; }
+  </style>
+</head>
+<body>
+  <div id="top">
+    <div id="appTitle" style="font-size:29px;">Orbital WASM</div>
+    <div id="status" style="font-size:18px;">Loader ready — see console for runtime logs</div>
+  </div>
+
+  <div id="canvas-wrap">
+    <canvas id="mainCanvas" width="1024" height="768" style="background:#000"></canvas>
+  </div>
+
+  <!-- Controles adicionados para app.js -->
+  <div id="controls">
+    <label>N:
+      <input id="n" type="number" value="3" min="1" max="15" style="width:4.5em; margin-left:6px;">
+    </label>
+
+    <button id="rowsBtn" type="button">Build rows</button>
+    <button id="applyBtn" type="button">Apply inputs</button>
+    <button id="startBtn" type="button">Start</button>
+    <button id="stopBtn" type="button">Stop</button>
+  </div>
+
+  <!-- Container onde as linhas/inputs serão inseridas pelo script -->
+  <div id="rows"></div>
+
+  <script>
+    Module._debug.log('index.html loaded, timestamp', new Date().toISOString());
+    // Quick checks
+    console.log('Quick checks:');
+    console.log('  document.getElementById("mainCanvas") ->', !!document.getElementById('mainCanvas'));
+    console.log('  Module pre (before index.js):', Object.keys(Module).sort());
+    console.log('  Time:', new Date().toISOString());
+  </script>
+
+  <!-- Core wasm loader produced by emcc (must exist) -->
+  <script src="index.js"></script>
+
+  <!-- Debug glue (app.js must be loaded after index.js) -->
+  <script src="app.js"></script>
+
+  <script>
+    // Final sanity logs and guidance
+    (function(){
+      const log = (...a) => console.log('[INDEX.HTML]', new Date().toISOString(), ...a);
+      log('Loaded index.js and app.js (if present).');
+      setTimeout(()=>{
+        log('Module.calledRun =', Module && Module.calledRun);
+        log('Module.runDependencies =', Module && Module.runDependencies);
+        log('Module keys (sample):', Object.keys(Module || {}).slice(0,60));
+        if (!(Module && (typeof Module.ccall === 'function' || typeof Module._start_animation === 'function'))) {
+          console.warn('[INDEX.HTML] WASM exports not visible yet. If this persists:');
+          console.warn('  - Ensure index.js served (200) and index.wasm present (200).');
+          console.warn('  - Disable cache and hard reload (Ctrl+F5).');
+          console.warn('  - Rebuild without --preload-file to simplify startup while debugging.');
+        }
+      }, 1500);
+    })();
+  </script>
+</body>
+</html>
